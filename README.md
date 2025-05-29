@@ -53,12 +53,6 @@ This agent automates the appointment booking process by:
 
 ---
 
-## 📄 License
-
-MIT — Free to use and modify.
-
----
-
 ## 💬 Example Use Case
 
 > “Hi, I’d like to book an appointment with John Doe on June 5th at 3 PM.”
