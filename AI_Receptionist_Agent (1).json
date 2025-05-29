@@ -1,0 +1,206 @@
+{
+  "name": "AI Receptionist Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "7cf0b972-fc07-459d-a958-6eb598986023",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        -40
+      ],
+      "id": "51b46a78-c2fa-4d21-8452-ae63ced8f6ab",
+      "name": "Webhook",
+      "webhookId": "7cf0b972-fc07-459d-a958-6eb598986023"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=The details of the requested appointment are: \n{{ $json.body.message.toolCalls[0].function.arguments.Name }}\n{{ $json.body.message.toolCalls[0].function.arguments['Phone Number'] }}\n{{ $json.body.message.toolCalls[0].function.arguments['Date and Time'] }}\n{{ $json.body.message.toolCalls[0].function.arguments['Email Address'] }}\n\n",
+        "options": {
+          "systemMessage": "#Overview\nYou are a helpful assistant that can look up availability and book appointments.\n\n#Tools\nCalendar Availability Tool\nBook Calendar Tool\n\n#Rules \nYou must check availability first before booking an appointment.\nIf the appointment is unavailable get the next 3 closest appointments and output: \"The requested time is unavailable, these times are (the next 3 closest times do not number)\"\nIf the appointment is available book the requested appointment and output: \"The appointment has been booked\"\nAll appointments are 30 minutes in length"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -60,
+        -40
+      ],
+      "id": "e881147e-235b-44b0-9bfb-9a231f959cba",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        140
+      ],
+      "id": "db80ebca-764b-402b-b3ab-3c096b0d573b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "0K5lHP3Z1gUQPYFa",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "lahoodreservations@gmail.com",
+          "mode": "list",
+          "cachedResultName": "lahoodreservations@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ $json.body.message.toolCalls[0].function.arguments.Name }}\n{{ $json.body.message.toolCalls[0].function.arguments['Phone Number'] }}\n{{ $json.body.message.toolCalls[0].function.arguments['Email Address'] }}\n",
+          "summary": "=AI Receptionist Demo with {{ $json.body.message.toolCalls[0].function.arguments.Name }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        140
+      ],
+      "id": "0d2a8e66-d66c-4145-9e8a-a35ae6297e37",
+      "name": "Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "woBeX6tmq7f99wYf",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "calendar",
+        "calendar": {
+          "__rl": true,
+          "value": "lahoodreservations@gmail.com",
+          "mode": "list",
+          "cachedResultName": "lahoodreservations@gmail.com"
+        },
+        "timeMin": "={{ $json.body.message.toolCalls[0].function.arguments['Date and Time'] }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End_Time', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        180,
+        120
+      ],
+      "id": "f639f57c-bab4-4b7c-9804-3106ffd6022a",
+      "name": "Google Calendar1",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "woBeX6tmq7f99wYf",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n    \"results\": [\n        {\n            \"toolCallId\": \"{{ $('Webhook').item.json.body.message.toolCalls[0].id }}\",\n            \"result\": \"{{ $json.output }}\"\n        }\n    ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        300,
+        -40
+      ],
+      "id": "9898b201-cf28-45d8-8d60-5c330d704e6d",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f1c2591b-f2fa-4bda-a40f-689237b7388f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2e413c2d31a096100e16efa9cb4834e1ddd059db88a82682950ec1aef617d09f"
+  },
+  "id": "QUVO9Rt4hbkMoUMn",
+  "tags": []
+}
